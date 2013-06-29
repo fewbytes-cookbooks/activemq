@@ -19,24 +19,18 @@
 
 include_recipe "java"
 
-tmp = Chef::Config[:file_cache_path]
-version = node['activemq']['version']
-mirror = node['activemq']['mirror']
-activemq_home = "#{node['activemq']['home']}/apache-activemq-#{version}"
+activemq_home = node['activemq']['home']
 
-directory node['activemq']['home'] do
-  recursive true
+user node["activemq"]["user"] do
+  system true
+  group "nogroup"
 end
 
-unless File.exists?("#{activemq_home}/bin/activemq")
-  remote_file "#{tmp}/apache-activemq-#{version}-bin.tar.gz" do
-    source "#{mirror}/activemq/apache-activemq/#{version}/apache-activemq-#{version}-bin.tar.gz"
-    mode "0644"
-  end
-
-  execute "tar zxf #{tmp}/apache-activemq-#{version}-bin.tar.gz" do
-    cwd node['activemq']['home']
-  end
+ark "activemq" do
+  version node["activemq"]["version"]
+  checksum node["activemq"]["checksum"]
+  url node["activemq"]["url"]
+  home_dir activemq_home
 end
 
 file "#{activemq_home}/bin/activemq" do
@@ -45,31 +39,59 @@ file "#{activemq_home}/bin/activemq" do
   mode "0755"
 end
 
-# TODO: make this more robust
-arch = (node['kernel']['machine'] == "x86_64") ? "x86-64" : "x86-32"
-
-link "/etc/init.d/activemq" do
-  to "#{activemq_home}/bin/linux-#{arch}/activemq"
+%w(base data tmp conf).each do |dir|
+directory node["activemq"][dir] do
+    owner node["activemq"]["user"]
+    mode "0755"
+  end
 end
 
-service "activemq" do
-  supports  :restart => true, :status => true
-  action [:enable, :start]
-end
+case node["activemq"]["init_style"]
+when "runit"
+  include_recipe "runit"
+  runit_service "activemq"
+when "upstart"
+  template "/etc/init/activemq.conf" do
+    mode "0644"
+    source "activemq.upstart.conf.erb"
+    notifies :restart, "service[activemq]"
+  end
 
-# symlink so the default wrapper.conf can find the native wrapper library
-link "#{activemq_home}/bin/linux" do
-  to "#{activemq_home}/bin/linux-#{arch}"
-end
+  service "activemq" do
+    supports  :restart => true, :status => true
+    action [:enable, :start]
+    provider ::Chef::Provider::Service::Upstart
+  end
 
-# symlink the wrapper's pidfile location into /var/run
-link "/var/run/activemq.pid" do
-  to "#{activemq_home}/bin/linux/ActiveMQ.pid"
-  not_if "test -f /var/run/activemq.pid"
-end
+when "systemd"
+  raise NotImplementedError, "systemd init_style not implemented yet"
+else
+  # TODO: make this more robust
+  arch = (node['kernel']['machine'] == "x86_64") ? "x86-64" : "x86-32"
 
-template "#{activemq_home}/bin/linux/wrapper.conf" do
-  source "wrapper.conf.erb"
-  mode 0644
-  notifies :restart, 'service[activemq]'
+  link "/etc/init.d/activemq" do
+    to "#{activemq_home}/bin/linux-#{arch}/activemq"
+  end
+
+  # symlink so the default wrapper.conf can find the native wrapper library
+  link "#{activemq_home}/bin/linux" do
+    to "#{activemq_home}/bin/linux-#{arch}"
+  end
+
+  # symlink the wrapper's pidfile location into /var/run
+  link "/var/run/activemq.pid" do
+    to "#{activemq_home}/bin/linux/ActiveMQ.pid"
+    not_if "test -f /var/run/activemq.pid"
+  end
+
+  template "#{activemq_home}/bin/linux/wrapper.conf" do
+    source "wrapper.conf.erb"
+    mode 0644
+    notifies :restart, 'service[activemq]'
+  end  
+
+  service "activemq" do
+    supports  :restart => true, :status => true
+    action [:enable, :start]
+  end
 end

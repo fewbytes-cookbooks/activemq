@@ -19,7 +19,11 @@ Attributes
 
 * `node['activemq']['mirror']` - download URL up to the activemq/apache-activemq directory.
 * `node['activemq']['version']` - version to install.
-* `node['activemq']['home']` - directory to deploy to (/opt by default)
+* `node['activemq']['home']` - directory to deploy to (/usr/local/activemq by default)
+* `node['activemq']['data']` - data directory
+* `node['activemq']['base']` - base directory for writable files
+* `node['activemq']['tmp']`  - tmp data directory
+* `node['activemq']['init_style']` - init system to use. can be one of `upstart`, `runit` or `init`
 * `node['activemq']['wrapper']['max_memory']` - maximum amount of memory to use for activemq.
 * `node['activemq']['wrapper']['useDedicatedTaskRunner']` - whether to use the dedicated task runner
 

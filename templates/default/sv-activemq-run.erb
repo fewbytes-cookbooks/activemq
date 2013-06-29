@@ -1,0 +1,10 @@
+#! /bin/sh
+exec 2>&1
+
+export ACTIVEMQ_HOME=<%= node['activemq']['home'] %>
+export ACTIVEMQ_CONF=<%= node['activemq']['conf'] %>
+export ACTIVEMQ_BASE=<%= node['activemq']['base'] %>
+export ACTIVEMQ_TMP=<%= node['activemq']['tmp'] %>
+export ACTIVEMQ_DATA=<%= node['activemq']['data'] %>
+
+exec chpst -u <%= node['activemq']['user'] %> $ACTIVEMQ_HOME/bin/activemq console

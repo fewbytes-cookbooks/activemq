@@ -19,6 +19,29 @@
 
 default['activemq']['mirror']  = "http://apache.mirrors.tds.net"
 default['activemq']['version'] = "5.8.0"
-default['activemq']['home']  = "/opt"
+default['activemq']['url'] = "#{activemq["mirror"]}/activemq/apache-activemq/#{activemq["version"]}/apache-activemq-#{activemq["version"]}-bin.tar.gz"
+default['activemq']['home']  = "/usr/local/activemq"
+default['activemq']['base'] = "/var/lib/activemq"
+default['activemq']['data'] = "/var/lib/activemq/data"
+default['activemq']['tmp'] = "/var/lib/activemq/tmp"
+default['activemq']['conf'] = "/usr/local/activemq/conf"
 default['activemq']['wrapper']['max_memory'] = "512"
 default['activemq']['wrapper']['useDedicatedTaskRunner'] = "true"
+default['activemq']['user'] = "activemq"
+
+default['activemq']['init_style'] = case platform
+					when "ubuntu"
+						"upstart"
+					when "fedora"
+						"systemd"
+					when "debian"
+						"runit"
+					when "centos", "redhat"
+						if platform_version.split(".").map(&:to_i) >= [6]
+							"upstart"
+						else
+							"init"
+						end
+					else
+						"init"
+					end

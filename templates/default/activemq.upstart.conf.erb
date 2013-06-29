@@ -1,0 +1,18 @@
+description "ActiveMQ broker service"
+
+start on runlevel [2345]
+stop on runlevel [016]
+
+setuid <%= node["activemq"]["user"] %>
+setgid nogroup
+chdir <%= node["activemq"]["home"] %>
+console log
+
+env ACTIVEMQ_HOME=<%= node['activemq']['home'] %>
+env ACTIVEMQ_CONF=<%= node['activemq']['conf'] %>
+env ACTIVEMQ_BASE=<%= node['activemq']['base'] %>
+env ACTIVEMQ_TMP=<%= node['activemq']['tmp'] %>
+env ACTIVEMQ_DATA=<%= node['activemq']['data'] %>
+
+
+exec <%= node['activemq']['home'] %>/bin/activemq console	
