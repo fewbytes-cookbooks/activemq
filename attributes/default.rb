@@ -29,6 +29,13 @@ default['activemq']['wrapper']['max_memory'] = "512"
 default['activemq']['wrapper']['useDedicatedTaskRunner'] = "true"
 default['activemq']['user'] = "activemq"
 
+default['activemq']['stomp']['port'] = 61613
+default['activemq']['stomp']['enable'] = true
+default['activemq']['stomp+nio']['enable'] = false
+default['activemq']['stomp+nio']['port'] = 61612
+default['activemq']['stomp+ssl']['enable'] = false
+default['activemq']['stomp+ssl']['port'] = 61612
+
 default['activemq']['init_style'] = case platform
 					when "ubuntu"
 						"upstart"

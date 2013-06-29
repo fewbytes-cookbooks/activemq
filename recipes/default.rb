@@ -46,6 +46,12 @@ directory node["activemq"][dir] do
   end
 end
 
+template ::File.join(node["activemq"]["conf"], "activemq.xml") do
+  source "activemq.xml.erb"
+  mode "0644"
+  notifies :restart, "service[activemq]"
+end
+
 case node["activemq"]["init_style"]
 when "runit"
   include_recipe "runit"
